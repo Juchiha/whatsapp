@@ -1,0 +1,26 @@
+{
+  "name": "whats",
+  "version": "1.0.0",
+  "description": "Api to connect whstaspp Web",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Juchiha/whatsapp.git"
+  },
+  "author": "Jose David Giron",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Juchiha/whatsapp/issues"
+  },
+  "homepage": "https://github.com/Juchiha/whatsapp#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}
