@@ -22,7 +22,11 @@ app.post('/whatsapp/init-session', async (req, res) => {
     }
 
     const client = new Client({
-        authStrategy: new LocalAuth({ clientId: sessionId })
+        authStrategy: new LocalAuth({ clientId: sessionId }),
+        puppeteer: {
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
     });
 
     client.on('qr', async (qr) => {
