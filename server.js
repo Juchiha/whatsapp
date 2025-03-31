@@ -70,7 +70,7 @@ app.get('/whatsapp/qr/:sessionId', async (req, res) => {
     res.send(`<img src="${qrCodes[sessionId]}" alt="QR Code">`);
 });
 
-app.get('/whatsapp/health/', async (res) => {
+app.get('/whatsapp/health/', async (req, res) => {
     return res.status(200).json({ msg: 'Aplicacion corriendo sin problema.' });
 });
 
