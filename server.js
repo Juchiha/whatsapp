@@ -71,6 +71,7 @@ app.get('/whatsapp/qr/:sessionId', async (req, res) => {
 });
 
 app.get('/whatsapp/health/', async (req, res) => {
+    console.log('Servidor API corriendo en http://localhost:3000/whatsapp/status OK')
     return res.status(200).json({ msg: 'Aplicacion corriendo sin problema.' });
 });
 
