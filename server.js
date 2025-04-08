@@ -40,7 +40,7 @@ app.post('/whatsapp/init-session', async (req, res) => {
     client.initialize();
     clients[sessionId] = client;
 
-    res.json({ success: true, message: `Sesión ${sessionId} iniciada. Escanea el QR en /qr/${sessionId}` });
+    res.json({ success: true, message: `Sesión ${sessionId} iniciada. Escanea el QR en /whatsapp/qr/${sessionId}` });
 });
 
 app.post('/whatsapp/send-message', async (req, res) => {
