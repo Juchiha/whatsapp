@@ -2,46 +2,75 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-let qrCodes = {}; // Guardar QR por sesión
-let clients = {}; // Guardar clientes activos
+let qrCodes = {}; 
+let clients = {};
+const SESSION_FILE_PATH = './session.json'; // Archivo donde guardaremos el estado de sesiones
 
-app.post('/whatsapp/init-session', async (req, res) => {
-    const { sessionId } = req.body;
+// Función para guardar el estado de sesión
+const guardarSesion = (sessionId) => {
+    const sessionData = { sessionId, active: true, timestamp: Date.now() };
+    fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(sessionData));
+};
 
-    if (!sessionId) {
-        return res.status(400).json({ error: 'Se requiere un sessionId' });
+// Función para cargar la sesión desde el archivo
+const cargarSesion = () => {
+    if (fs.existsSync(SESSION_FILE_PATH)) {
+        const data = JSON.parse(fs.readFileSync(SESSION_FILE_PATH));
+        return data.active ? data.sessionId : null;
     }
+    return null;
+};
 
+// Inicialización de una sesión nueva o restaurada
+const iniciarCliente = (sessionId) => {
     if (clients[sessionId]) {
-        return res.json({ success: true, message: `La sesión ${sessionId} ya está activa` });
+        console.log(`La sesión ${sessionId} ya está activa.`);
+        return clients[sessionId];
     }
 
     const client = new Client({
-        authStrategy: new LocalAuth({ clientId: sessionId }),
-        puppeteer: {
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        }
+        authStrategy: new LocalAuth({ clientId: sessionId })
     });
 
     client.on('qr', async (qr) => {
-        qrCodes[sessionId] = await qrcode.toDataURL(qr); // Generar imagen QR en base64
+        qrCodes[sessionId] = await qrcode.toDataURL(qr);
     });
 
     client.on('ready', () => {
-        console.log(`Cliente ${sessionId} listo`);
+        console.log(`Cliente ${sessionId} listo.`);
+        guardarSesion(sessionId);
+    });
+
+    client.on('disconnected', () => {
+        console.log(`Cliente ${sessionId} desconectado. Intentando restaurar...`);
+        fs.unlinkSync(SESSION_FILE_PATH);
+        setTimeout(() => iniciarCliente(sessionId), 3000);
     });
 
     client.initialize();
     clients[sessionId] = client;
+    return client;
+};
 
-    res.json({ success: true, message: `Sesión ${sessionId} iniciada. Escanea el QR en /whatsapp/qr/${sessionId}` });
+// Endpoint para iniciar sesión de WhatsApp
+app.post('/whatsapp/init-session', async (req, res) => {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+        return res.status(400).json({ error: 'Se requiere un sessionId' });
+    }
+
+    const sesionGuardada = cargarSesion();
+    const cliente = iniciarCliente(sesionGuardada || sessionId);
+
+    res.json({ success: true, message: `Sesión ${sessionId} iniciada o restaurada. Escanea el QR en /qr/${sessionId}` });
 });
+
 
 app.post('/whatsapp/send-message', async (req, res) => {
     const { sessionId, number, message } = req.body;
@@ -62,7 +91,7 @@ app.post('/whatsapp/send-message', async (req, res) => {
 
 app.get('/whatsapp/qr/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
-
+    console.log('Servidor API corriendo en http://localhost:3000/whatsapp/status OK')
     if (!qrCodes[sessionId]) {
         return res.status(404).json({ error: 'QR no disponible. Inicia la sesión primero.' });
     }

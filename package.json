@@ -2,10 +2,10 @@
   "name": "whats",
   "version": "1.0.0",
   "description": "Api to connect whstaspp Web",
-  "main": "server.js",
+  "main": "wh.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node wh.js"
   },
   "repository": {
     "type": "git",
